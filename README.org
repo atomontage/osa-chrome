@@ -1,0 +1,125 @@
+[[https://opensource.org/licenses/BSD-2-Clause][https://img.shields.io/badge/license-BSD-blue.svg]]
+
+osa-chrome.el is an Emacs Mac port interface to Google Chrome.
+
+The current focus is on ultra-fast tab manipulation that scales to huge numbers
+of tabs. More functionality may be added in future releases.
+
+* Features
+
++ Fetching all tabs (URLs/titles) from all windows belonging to all
+  currently running Chrome processes.
+
++ Setting the current tab, optionally switching focus to Chrome, for any tab
+  from any window belonging to any currently running Chrome process.
+
++ Custom tab views: by pid, duplicates, marked, active. Independent from filtering.
+
++ Filters, views and tab display can be extended or replaced with alternative
+  implementations.
+
++ Tracking, displaying and rapid switching between all active (currently selected)
+  tabs in Chrome.
+
++ Marking/unmarking for tab-at-point, tabs in region or all visible tabs. Marks
+  persist across filtering / limiting operations, until explicitly removed.
+
++ Rapid filtering based on typed regular expression
++ Switch between viewing URLs or titles at any point
++ Copy URL
++ Delete tab-at-point or all marked tabs
++ View HTML source of any tab
++ Emacs Lisp API on top of a basic data model
++ Strong focus on performance
+
+* Performance
+osa-chrome.el was designed upfront with heavy emphasis on performance. I use
+Chrome through my [[https://github.com/atomontage/chrome-private][chrome-private]] wrapper and go through hundreds of disposable
+profiles every day. Some of these profiles are segmented / tied to particular
+areas of research and kept around for as long as they're needed. They can grow
+to contain hundreds and add up to thousands of tabs in total.
+
+osa-chrome.el allows me to keep up with this volume of information and
+effortlessly manipulate it since it's at least an order of magnitude faster
+than the alternatives: Rather that calling out to a separate ~osascript~ process
+and either parsing strings or JSON, osa-chrome.el works directly on top of Apple
+Events through an [[https://github.com/atomontage/osa][Emacs Lisp bridge]].
+
+The JXA code that is used to interface with Chrome has been written from scratch
+to take full advantage of batch operations and lazy-evaluation through selectors
+in order to minimize communication roundtrips.
+
+I used the excellent [[https://github.com/skeeto/elfeed][Elfeed]] as an inspiration for the user interface, and tried
+to shorten the feedback loop as much as possible (e.g. by not using the minibuffer).
+
+* Usage
+Depends on [[https://github.com/atomontage/osa][osa.el]] which needs to be installed.
+
+#+BEGIN_SRC emacs-lisp
+M-x osa-chrome
+
+C-h m ; to see default keybindings.
+#+END_SRC
+
+I don't use or have plans to add direct support for Helm or other similar
+completion frameworks. That can be easily accomplished and kept external to the
+package, through the Emacs Lisp API that osa-chrome.el exposes.
+
+If you know how to replace Apple Events with equivalent functionality on Linux,
+let me know and I will turn this into a cross-platform mode, assuming it makes
+sense to do so.
+
+Regarding other browsers, Firefox does not expose _any_ OSA endpoints whatsoever
+and Safari does not expose unique ids for tabs. Writing a similar mode for Safari
+is possible but absence of unique ids means more complicated code, and since I am
+not using it at all, I have no incentive to support it.
+
+* Configuration
+The default configuration will use "Google Chrome" as the application name and
+operate in single instance mode. If you are using Google Chrome Canary, change
+~osa-chrome-application-name~ accordingly.
+
+Single instance mode means that tabs will be retrieved from a single Chrome
+instance (including all windows belonging to that instance). If you don't
+run multiple independent Chrome instances on your system, this is what you want
+and no further configuration is needed.
+
+If you use my [[https://github.com/atomontage/chrome-private][chrome-private]] wrapper or run concurrent independent Chrome
+instances, you need to set ~osa-chrome-single-instance~ to nil and enable
+Remote Apple Events in System Preferences -> Sharing which should also be
+restricted to a specific user (will require authentication over TLS). You can
+also enable the firewall and either tick "Block all incoming connections" or
+add a custom PF anchor for fine-grained control. Finally, you need to
+configure ~osa-chrome-machine-url~ by either:
+
++ Leaving it empty but having an appropriate entry in authinfo:
+
+#+BEGIN_SRC emacs-lisp
+machine localhost port eppc login user password pass
+#+END_SRC
+
+where user and pass correspond to the username/password of the user that
+is allowed to authenticate for Remote Apple Events.
+
+or
+
++ Setting it to "eppc://user:password@localhost" with the same information.
+
+It is unfortunate that one has to go through all these steps, but enabling
+Remote Apple Events is the only way to establish per-PID application control
+on macOS. Finally, let me reiterate that this is not needed unless one is
+using multiple independent Chrome instances at the same time.
+
+* Note
+Does not work with official GNU Emacs for macOS (or emacsformacosx.com).
+You need Yamamoto Mitsuharu's excellent [[https://bitbucket.org/mituharu/emacs-mac][Emacs Mac port]], which can also
+be found in MacPorts and Homebrew.
+
+* License
+This repository uses 2 different licenses:
+
+- All files in the 'scripts' directory use a public-domain equivalent license
+- All other files use a 2-clause BSD license
+
+* Author
+xristos (AT) sdf (DOT) org
