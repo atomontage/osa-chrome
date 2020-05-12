@@ -155,15 +155,15 @@ Set this manually if auto-detection fails.")
 (cl-defstruct (osa-chrome-tab
                (:constructor osa-chrome-tab-create)
                (:copier nil))
-  (pid       :read-only t)    ; PID of Chrome instance that contains this tab
-  (id        :read-only t)    ; Unique id of tab in this Chrome instance
-  (window-id :read-only t)    ; Unique id of window that contains this tab
-  (url       :read-only t)    ; URL of tab
-  (title     :read-only t)    ; Title of tab
-  is-active                   ; Is tab selected in OSA Chrome buffer?
-  is-marked                   ; Is tab marked in Emacs?
-  is-duplicate                ; Is tab a dupicate of another? (based on URL)
-  line)                       ; Tab line number in OSA Chrome buffer
+  (pid       nil :read-only t)    ; PID of Chrome instance that contains this tab
+  (id        nil :read-only t)    ; Unique id of tab in this Chrome instance
+  (window-id nil :read-only t)    ; Unique id of window that contains this tab
+  (url       nil :read-only t)    ; URL of tab
+  (title     nil :read-only t)    ; Title of tab
+  is-active                       ; Is tab selected in OSA Chrome buffer?
+  is-marked                       ; Is tab marked in Emacs?
+  is-duplicate                    ; Is tab a dupicate of another? (based on URL)
+  line)                           ; Tab line number in OSA Chrome buffer
 
 
 ;;;

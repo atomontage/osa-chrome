@@ -53,7 +53,7 @@ I used the excellent [[https://github.com/skeeto/elfeed][Elfeed]] as an inspirat
 to shorten the feedback loop as much as possible (e.g. by not using the minibuffer).
 
 * Usage
-Depends on [[https://github.com/atomontage/osa][osa.el]] which needs to be installed.
+Requires [[https://github.com/atomontage/osa][osa.el]].
 
 #+BEGIN_SRC emacs-lisp
 M-x osa-chrome
@@ -70,9 +70,9 @@ let me know and I will turn this into a cross-platform mode, assuming it makes
 sense to do so.
 
 Regarding other browsers, Firefox does not expose _any_ OSA endpoints whatsoever
-and Safari does not expose unique ids for tabs. Writing a similar mode for Safari
-is possible but absence of unique ids means more complicated code, and since I am
-not using it at all, I have no incentive to support it.
+and Safari does not expose unique tab ids. Writing a similar mode for Safari
+is possible but lack of unique ids means more complicated code, and since I am
+not using Safari, I have no incentive to support it.
 
 * Configuration
 The default configuration will use "Google Chrome" as the application name and
