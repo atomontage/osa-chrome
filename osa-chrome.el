@@ -175,17 +175,13 @@ Set this manually if auto-detection fails.")
   (let ((message-truncate-lines t))
     (message "osa-chrome: %s" (apply #'format format-string args))))
 
-(defvar osa-chrome--start-time nil)
-(make-variable-buffer-local 'osa-chrome--start-time)
+(defvar-local osa-chrome--start-time nil)
 
-(defvar osa-chrome--elapsed-time nil)
-(make-variable-buffer-local 'osa-chrome--elapsed-time)
+(defvar-local osa-chrome--elapsed-time nil)
 
-(defvar osa-chrome--process-index nil)
-(make-variable-buffer-local 'osa-chrome--process-index)
+(defvar-local osa-chrome--process-index nil)
 
-(defvar osa-chrome--cached-tabs nil)
-(make-variable-buffer-local 'osa-chrome--cached-tabs)
+(defvar-local osa-chrome--cached-tabs nil)
 
 (defun osa-chrome--refresh-tabs (tabs)
   (clrhash osa-chrome--process-index)
@@ -241,19 +237,16 @@ Set this manually if auto-detection fails.")
                        osa-chrome--start-time))
           osa-chrome--start-time nil)))
 
-(defvar osa-chrome--visible-tabs nil)
-(make-variable-buffer-local 'osa-chrome--visible-tabs)
+(defvar-local osa-chrome--visible-tabs nil)
 
-(defvar osa-chrome--marked-tabs 0)
-(make-variable-buffer-local 'osa-chrome--marked-tabs)
+(defvar-local osa-chrome--marked-tabs 0)
 
 (defun osa-chrome--init-caches ()
   (setq osa-chrome--process-index (make-hash-table)
         osa-chrome--visible-tabs  (make-hash-table)
         osa-chrome--cached-tabs   (make-hash-table :test 'equal)))
 
-(defvar osa-chrome--cached-auth nil)
-(make-variable-buffer-local 'osa-chrome--cached-auth)
+(defvar-local osa-chrome--cached-auth nil)
 
 (defun osa-chrome--machine-url ()
   (cond ((and osa-chrome-machine-url
@@ -300,16 +293,14 @@ Set this manually if auto-detection fails.")
 ;;;
 
 
-(defvar osa-chrome--active-filter nil)
-(make-variable-buffer-local 'osa-chrome--active-filter)
+(defvar-local osa-chrome--active-filter nil)
 
 (defun osa-chrome--find-script (name)
   (unless osa-chrome-script-directory
     (error "Script directory is unset (osa-chrome-script-directory)"))
   (concat osa-chrome-script-directory name))
 
-(defvar osa-chrome--last-tab nil)
-(make-variable-buffer-local 'osa-chrome--last-tab)
+(defvar-local osa-chrome--last-tab nil)
 
 (defsubst osa-chrome--goto-line (line)
   (goto-char (point-min))
@@ -379,9 +370,8 @@ Set this manually if auto-detection fails.")
 ;;;
 
 
-(defvar osa-chrome--header-function #'osa-chrome--header
+(defvar-local osa-chrome--header-function #'osa-chrome--header
   "Function that returns the string for the tab view header.")
-(make-variable-buffer-local 'osa-chrome--header-function)
 
 (defun osa-chrome--header-1 ()
   (let* ((total-tabs   (hash-table-count osa-chrome--cached-tabs))
@@ -432,11 +422,8 @@ Set this manually if auto-detection fails.")
                              'help-echo "Search filter"
                              'face 'osa-chrome-tab-filter-face)))))))
 
-(defvar osa-chrome--header-update nil)
-(make-variable-buffer-local 'osa-chrome--header-update)
-
-(defvar osa-chrome--header-cache nil)
-(make-variable-buffer-local 'osa-chrome--header-cache)
+(defvar-local osa-chrome--header-update nil)
+(defvar-local osa-chrome--header-cache nil)
 
 (defun osa-chrome--header ()
   (if (and (null osa-chrome--header-update)
