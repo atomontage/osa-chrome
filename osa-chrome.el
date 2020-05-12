@@ -607,7 +607,7 @@ and active-tab-ids."
 
 (defun osa-chrome-toggle-timing ()
   (interactive)
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (let ((timingp osa-chrome-show-timing))
     (setq-local osa-chrome-show-timing (if timingp nil t))
     (setq osa-chrome--header-update t))
@@ -615,7 +615,7 @@ and active-tab-ids."
 
 (defun osa-chrome-toggle-view ()
   (interactive)
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (let ((view osa-chrome-default-view))
     (setq-local osa-chrome-default-view
                 (if (eq view :title) :url :title)))
@@ -623,13 +623,13 @@ and active-tab-ids."
 
 (defun osa-chrome-limit-marked ()
   (interactive)
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (setq-local osa-chrome-default-limit :mark)
   (osa-chrome--filter-tabs))
 
 (defun osa-chrome-limit-pid ()
   (interactive)
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (let* ((limit osa-chrome-default-limit)
          (pids (cl-loop for pid in (hash-table-keys osa-chrome--process-index)
                         vconcat (list pid)))
@@ -642,26 +642,26 @@ and active-tab-ids."
 
 (defun osa-chrome-limit-dup ()
   (interactive)
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (setq-local osa-chrome-default-limit :dup)
   (osa-chrome--filter-tabs))
 
 (defun osa-chrome-limit-active ()
   (interactive)
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (setq-local osa-chrome-default-limit :active)
   (osa-chrome--filter-tabs))
 
 (defun osa-chrome-limit-none ()
   (interactive)
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (unless (eq :all osa-chrome-default-limit)
     (setq-local osa-chrome-default-limit :all)
     (osa-chrome--filter-tabs)))
 
 (defun osa-chrome-copy-url ()
   (interactive)
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (when-let ((tab (osa-chrome-current-tab)))
     (let ((url (osa-chrome-tab-url tab)))
       (kill-new url)
@@ -670,7 +670,7 @@ and active-tab-ids."
 (defun osa-chrome-reload-tabs ()
   "Retrieve and filter all Chrome tabs."
   (interactive)
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (osa-chrome--with-timing
     (setq osa-chrome--marked-tabs 0)
     (osa-chrome--refresh-tabs (osa-chrome-get-tabs))
@@ -679,7 +679,7 @@ and active-tab-ids."
 (defun osa-chrome-reset-filter ()
   "Reset active tab filter."
   (interactive)
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (setq osa-chrome--active-filter nil)
   (osa-chrome--filter-tabs))
 
@@ -697,7 +697,7 @@ and active-tab-ids."
 
 (defun osa-chrome-delete-tab ()
   (interactive)
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (when-let ((tab (osa-chrome-current-tab)))
     (let* ((pid       (osa-chrome-tab-pid tab))
            (tab-id    (osa-chrome-tab-id tab))
@@ -715,7 +715,7 @@ and active-tab-ids."
 (defun osa-chrome-delete-marked-tabs ()
   "Delete tab."
   (interactive)
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (when (> osa-chrome--marked-tabs 0)
     (osa-chrome--with-timing
       (cl-loop
@@ -741,7 +741,7 @@ and active-tab-ids."
 
 (defun osa-chrome-mark-tab (&optional tab)
   (interactive)
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (let ((move-forward (if tab nil t)))
     (when-let ((tab (or tab (osa-chrome-current-tab))))
       (unless (osa-chrome-tab-is-marked tab)
@@ -756,7 +756,7 @@ and active-tab-ids."
 
 (defun osa-chrome-unmark-tab (&optional tab)
   (interactive)
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (let ((move-forward (if tab nil t)))
     (when-let ((tab (or tab (osa-chrome-current-tab))))
       (when (osa-chrome-tab-is-marked tab)
@@ -783,12 +783,12 @@ and active-tab-ids."
 
 (defun osa-chrome-mark-all-tabs ()
   (interactive)
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (osa-chrome-do-visible-tabs #'osa-chrome-mark-tab))
 
 (defun osa-chrome-unmark-all-tabs ()
   (interactive)
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (osa-chrome-do-visible-tabs #'osa-chrome-unmark-tab))
 
 
@@ -808,7 +808,7 @@ and active-tab-ids."
 
 (defun osa-chrome-view-source ()
   (interactive)
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (when-let ((tab (osa-chrome-current-tab)))
     (osa-chrome--with-timing
       (let* ((osa-strict-unpacking t)
@@ -843,7 +843,7 @@ and active-tab-ids."
 
 (defun osa-chrome-visit-tab (&optional noraise)
   (interactive "P")
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (when-let ((tab (osa-chrome-current-tab)))
     (osa-chrome--with-timing
       (let* ((window-id (osa-chrome-tab-window-id tab))
@@ -881,7 +881,7 @@ and active-tab-ids."
 
 (defun osa-chrome-goto-active ()
   (interactive)
-  (cl-assert (eq major-mode 'osa-chrome-mode))
+  (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (when (> (hash-table-count osa-chrome--visible-tabs) 0)
     (cl-loop with pos   = (point)
              with tab   = (osa-chrome-current-tab)
