@@ -36,7 +36,7 @@ of tabs. More functionality may be added in future releases.
 
 * Performance
 osa-chrome.el was designed upfront with heavy emphasis on performance. I use
-Chrome through my [[https://github.com/atomontage/chrome-private][chrome-private]] wrapper and go through hundreds of disposable
+Chrome through my [[https://github.com/atomontage/chrome-private][chrome-private]] wrapper and generate hundreds of disposable
 profiles every day. Some of these profiles are segmented / tied to particular
 areas of research and kept around for as long as they're needed. They can grow
 to contain hundreds and add up to thousands of tabs in total.
@@ -68,7 +68,7 @@ completion frameworks. That can be easily accomplished and kept external to the
 package, through the Emacs Lisp API that osa-chrome.el exposes.
 
 If you know how to replace Apple Events with equivalent functionality on Linux,
-let me know and I will turn this into a cross-platform mode, assuming it makes
+do let me know and I can turn this into a cross-platform mode, assuming it makes
 sense to do so.
 
 Regarding other browsers, Firefox does not expose _any_ OSA endpoints whatsoever
@@ -83,8 +83,8 @@ operate in single instance mode. If you are using Google Chrome Canary, change
 
 Single instance mode means that tabs will be retrieved from a single Chrome
 instance (including all windows belonging to that instance). If you don't
-run multiple independent Chrome instances on your system, this is what you want
-and no further configuration is needed.
+run multiple independent Chrome instances, this is what you want and no further
+configuration is needed.
 
 If you use my [[https://github.com/atomontage/chrome-private][chrome-private]] wrapper or run concurrent independent Chrome
 instances, you need to set ~osa-chrome-single-instance~ to nil and enable
@@ -108,9 +108,9 @@ or
 + Setting it to "eppc://user:password@localhost" with the same information.
 
 It is unfortunate that one has to go through all these steps, but enabling
-Remote Apple Events is the only way to establish per-PID application control
-on macOS. Finally, let me reiterate that this is not needed unless one is
-using multiple independent Chrome instances at the same time.
+Remote Apple Events is the only way I know of that allows for per-PID
+application control. Finally, let me reiterate that this is not needed unless
+one is using multiple independent Chrome instances at the same time.
 
 * Note
 Does not work with official GNU Emacs for macOS (or emacsformacosx.com).
