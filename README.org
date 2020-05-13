@@ -125,3 +125,5 @@ This repository uses 2 different licenses:
 
 * Author
 xristos (AT) sdf (DOT) org
+
+Thanks to [[https://github.com/anticomputer][Bas Alberts]] for testing.

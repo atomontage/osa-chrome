@@ -88,7 +88,7 @@ Change this if you are using Google Chrome Canary.")
   "If non-nil, get all tabs from all windows from a single Chrome instance.
 This is the simplest and most common scenario requiring no extra
 configuration, but in the case where multiple Chrome instances are running,
-it is not possible to choose which one will end up being used.
+it is not possible to choose which one will be used.
 
 If nil, get all tabs from all windows belonging to all currently running
 Chrome instances. You need to enable Remote Apple Events for this, as
@@ -108,7 +108,7 @@ machine localhost port eppc login user password pass")
   "Function that renders a tab into a string for display.
 
 The function must accept one argument, an osa-chrome-tab instance,
-and return a string that should not span more than one line.")
+and return a string that must not span more than one line.")
 
 (defvar osa-chrome-limit-function #'osa-chrome-limit-tab
   "Function that limits visible tabs based on certain criteria.
@@ -129,7 +129,7 @@ filter can be retrieved by calling `osa-chrome-active-filter'.")
 This can be toggled by `osa-chrome-toggle-timing'.")
 
 (defvar osa-chrome-default-view :title
-  "Show tab titles when :title, URLs otherwise.
+  "Show tab titles when equal to :title, URLs otherwise.
 This can be toggled by `osa-chrome-toggle-url-view'.")
 
 (defvar osa-chrome-default-limit :all
@@ -151,7 +151,7 @@ Note that every retrieval recreates tab state in Emacs and thus discards
 what was previously there (except filter and limit).
 Currently this only applies to `osa-chrome-visit-tab'.
 
-Delete operations will always retrieve all tabs post-operation.")
+Delete operations always trigger a tab retrieval post-operation.")
 
 (defvar osa-chrome-script-directory
   (and load-file-name
@@ -198,7 +198,7 @@ Values are osa-chrome-tab instances.")
 
 (defun osa-chrome--reindex-tabs (tabs)
   "Index TABS into `osa-chrome--process-index' and `osa-chrome--cached-tabs'.
-TABS should be an alist as returned from `osa-chrome-get-tabs'."
+TABS must be an alist as returned from `osa-chrome-get-tabs'."
   (clrhash osa-chrome--process-index)
   (clrhash osa-chrome--cached-tabs)
   (cl-loop
@@ -533,20 +533,19 @@ they are in Chrome, older ones before newer ones.
 
 Tabs can be further filtered in realtime by a user-specified regular
 expression and limited by certain criteria described below. This mode tries
-to remember the location of point and its associated tab so that it keeps
-that tab selected across filtering/limiting operations, assuming the tab
-is visible.
+to remember point so that it keeps its associated tab selected across
+filtering/limiting operations, assuming the tab is visible.
 
 To minimize the feedback loop, this mode does not use the minibuffer
 for input (e.g. when typing a filter regular expression).
-You can start typing immediately and the filter will be displayed on
+You can start typing immediately and the filter updates, visible on
 the header line.
 
 Other than regular keys being bound to `osa-chrome--self-insert-command',
 the following commands are available:
 
-Type \\[osa-chrome-visit-tab] to switch to tab at point in Chrome. This will bring Chrome
-into focus and raise the window that contains the tab. With a prefix
+Type \\[osa-chrome-visit-tab] to switch to tab at point in Chrome. This brings Chrome
+into focus and raises the window that contains the tab. With a prefix
 argument, switch to the tab in Chrome but keep input focus in Emacs and
 do not raise Chrome window.
 
@@ -578,7 +577,7 @@ Type \\[osa-chrome-limit-dup] to only show duplicate tabs (by URL).
 Type \\[osa-chrome-limit-active] to only show active tabs (selected in Chrome).
 
 Type \\[osa-chrome-limit-pid] to only show tabs belonging to a specific Chrome
-instance by PID. You can't directly input the PID, by repeatedly typing \\[osa-chrome-limit-pid]
+instance by PID. Since you can't directly input the PID, by repeatedly typing \\[osa-chrome-limit-pid]
 you can cycle through all PIDs.
 
 Type \\[osa-chrome-limit-none] to remove the current limit and show all tabs.
@@ -635,7 +634,7 @@ Deleting a single or all marked tabs always triggers a full tab retrieval from C
 (defun osa-chrome-render-tab (tab)
   "Return string representation of TAB.
 String is used as is to display TAB in *chrome-tabs* buffer.
-It must not span more than one line."
+It must not span more than one line but it may contain text properties."
   (let ((url       (osa-chrome-tab-url tab))
         (title     (osa-chrome-tab-title tab))
         (is-active (osa-chrome-tab-is-active tab))
@@ -738,7 +737,7 @@ and active-tab-ids."
 
 (defun osa-chrome-limit-pid ()
   "Only show tabs belonging to a specific Chrome instance, by PID.
-You can't directly input the PID, by repeatedly invoking this command
+Since you can't directly input the PID, by repeatedly invoking this command
 you can cycle through all PIDs."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
@@ -972,7 +971,7 @@ in Chrome to use this command."
 
 (defun osa-chrome-visit-tab (&optional noraise)
   "Switch to tab at point in Chrome.
-This will bring Chrome into focus and raise the window that contains the tab.
+This brings Chrome into focus and raises the window that contains the tab.
 With a prefix argument, switch to the tab in Chrome but keep input focus in
 Emacs and do not raise Chrome window."
   (interactive "P")
