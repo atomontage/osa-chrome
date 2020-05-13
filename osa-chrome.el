@@ -126,24 +126,32 @@ filter can be retrieved by calling `osa-chrome-active-filter'.")
 (defvar osa-chrome-show-timing t
   "Measure and display elapsed time after every operation.
 
-This can be toggled by function `osa-chrome-toggle-timing'.")
+This can be toggled by `osa-chrome-toggle-timing'.")
 
 (defvar osa-chrome-default-view :title
   "Show tab titles when :title, URLs otherwise.
-
-This can be toggled by `osa-chrome-toggle-view'.")
+This can be toggled by `osa-chrome-toggle-url-view'.")
 
 (defvar osa-chrome-default-limit :all
   "Default limit.
 
 Can be one of :all, :mark, :dup, :active or an integer specifying a PID.
-This can be toggled by `osa-chrome-limit-' functions.")
+This can be toggled by:
 
-(defvar osa-chrome-auto-reload nil
-  "If non-nil, reload all tabs after every operation.
+ `osa-chrome-limit-none'
+ `osa-chrome-limit-marked'
+ `osa-chrome-limit-dup'
+ `osa-chrome-limit-active'
+ `osa-chrome-limit-pid'.")
 
+(defvar osa-chrome-auto-retrieve nil
+  "If non-nil, retrieve all tabs after every operation.
+
+Note that every retrieval recreates tab state in Emacs and thus discards
+what was previously there (except filter and limit).
 Currently this only applies to `osa-chrome-visit-tab'.
-Delete operations will always reload all tabs.")
+
+Delete operations will always retrieve all tabs post-operation.")
 
 (defvar osa-chrome-script-directory
   (and load-file-name
@@ -171,19 +179,26 @@ Set this manually if auto-detection fails.")
 ;;;
 
 
-(defun osa-chrome--message (format-string &rest args)
-  (let ((message-truncate-lines t))
-    (message "osa-chrome: %s" (apply #'format format-string args))))
+(defvar-local osa-chrome--process-index nil
+  "Hash table that contains indexed tabs (osa-chrome-tab instances).
 
-(defvar-local osa-chrome--start-time nil)
+Keys are integers (PIDs).
+Values are conses of form:
 
-(defvar-local osa-chrome--elapsed-time nil)
+  ((tab-count . window-count) tab-list)
 
-(defvar-local osa-chrome--process-index nil)
+Tabs in tab-list are ordered as they appear in Chrome:
+Older tabs before newer tabs.")
 
-(defvar-local osa-chrome--cached-tabs nil)
+(defvar-local osa-chrome--cached-tabs nil
+  "Hash table that contains indexed tabs (osa-chrome-tab instances).
 
-(defun osa-chrome--refresh-tabs (tabs)
+Keys are conses of form: (pid . tab-id)
+Values are osa-chrome-tab instances.")
+
+(defun osa-chrome--reindex-tabs (tabs)
+  "Index TABS into `osa-chrome--process-index' and `osa-chrome--cached-tabs'.
+TABS should be an alist as returned from `osa-chrome-get-tabs'."
   (clrhash osa-chrome--process-index)
   (clrhash osa-chrome--cached-tabs)
   (cl-loop
@@ -225,20 +240,7 @@ Set this manually if auto-detection fails.")
          (cons (cons tab-count window-count)
                (nreverse process-tabs)))))
 
-(defun osa-chrome--start-timer ()
-  (unless osa-chrome--start-time
-    (setq osa-chrome--start-time (current-time))))
-
-(defun osa-chrome--stop-timer ()
-  (when osa-chrome--start-time
-    (setq osa-chrome--elapsed-time
-          (float-time (time-subtract
-                       (current-time)
-                       osa-chrome--start-time))
-          osa-chrome--start-time nil)))
-
 (defvar-local osa-chrome--visible-tabs nil)
-
 (defvar-local osa-chrome--marked-tabs 0)
 
 (defun osa-chrome--init-caches ()
@@ -265,6 +267,21 @@ Set this manually if auto-detection fails.")
                   (format "eppc://%s:%s@%s" user secret host)))
           (error "Missing URL, see osa-chrome-machine-url")))))
 
+(defvar-local osa-chrome--start-time nil)
+(defvar-local osa-chrome--elapsed-time nil)
+
+(defun osa-chrome--start-timer ()
+  (unless osa-chrome--start-time
+    (setq osa-chrome--start-time (current-time))))
+
+(defun osa-chrome--stop-timer ()
+  (when osa-chrome--start-time
+    (setq osa-chrome--elapsed-time
+          (float-time (time-subtract
+                       (current-time)
+                       osa-chrome--start-time))
+          osa-chrome--start-time nil)))
+
 (cl-defmacro osa-chrome--with-timing (&body body)
   (declare (indent defun))
   `(unwind-protect
@@ -273,6 +290,10 @@ Set this manually if auto-detection fails.")
          ,@body)
      (osa-chrome--stop-timer)
      (setq osa-chrome--header-update t)))
+
+(defun osa-chrome--message (format-string &rest args)
+  (let ((message-truncate-lines t))
+    (message "osa-chrome: %s" (apply #'format format-string args))))
 
 (cl-defmacro osa-chrome--check-error ((res) call &body body)
   (declare (indent defun))
@@ -287,6 +308,7 @@ Set this manually if auto-detection fails.")
                                     (format " [%s]" ,err-data)
                                   ""))
          ,@body))))
+
 
 ;;;
 ;;; Filtering
@@ -371,9 +393,10 @@ Set this manually if auto-detection fails.")
 
 
 (defvar-local osa-chrome--header-function #'osa-chrome--header
-  "Function that returns the string for the tab view header.")
+  "Function that returns a string for tab view header line.")
 
 (defun osa-chrome--header-1 ()
+  "Generate string for tab view header line."
   (let* ((total-tabs   (hash-table-count osa-chrome--cached-tabs))
          (visible-tabs (hash-table-count osa-chrome--visible-tabs))
          (total-procs  (hash-table-count osa-chrome--process-index))
@@ -415,7 +438,8 @@ Set this manually if auto-detection fails.")
                  (other other)))
        " "
        (when osa-chrome-show-timing
-         (format " %.4fs " osa-chrome--elapsed-time))
+         (propertize (format " %.4fs " osa-chrome--elapsed-time)
+                     'help-echo "Elapsed time for last operation"))
        (when-let ((filter (osa-chrome-active-filter)))
          (format "Filter: %s"
                  (propertize filter
@@ -426,6 +450,10 @@ Set this manually if auto-detection fails.")
 (defvar-local osa-chrome--header-cache nil)
 
 (defun osa-chrome--header ()
+  "Return string for tab view header line.
+If a previously cached string is still valid, it is returned.
+Otherwise, a new string is generated and returned by calling
+`osa-chrome--header-1'."
   (if (and (null osa-chrome--header-update)
            (eql (car osa-chrome--header-cache) (buffer-modified-tick)))
       (cdr osa-chrome--header-cache)
@@ -454,7 +482,7 @@ Set this manually if auto-detection fails.")
      global-map)
     ;; Standard bindings
     (define-key map (kbd "DEL")      'osa-chrome--self-insert-command)
-    (define-key map (kbd "C-l")      'osa-chrome-reload-tabs)
+    (define-key map (kbd "C-l")      'osa-chrome-retrieve-tabs)
     (define-key map (kbd "C-k")      'osa-chrome-reset-filter)
     (define-key map (kbd "C-t")      'osa-chrome-toggle-timing)
     (define-key map (kbd "C-w")      'osa-chrome-copy-url)
@@ -469,7 +497,7 @@ Set this manually if auto-detection fails.")
     (define-key map [(tab)]          'osa-chrome-goto-active)
     (define-key map (kbd "C-<up>")   'previous-line)
     (define-key map (kbd "C-<down>") 'next-line)
-    (define-key map (kbd "\\")       'osa-chrome-toggle-view)
+    (define-key map (kbd "\\")       'osa-chrome-toggle-url-view)
     ;; Prefix bindings
     (define-key map (kbd "/")         prefix-map)
     (define-key prefix-map (kbd "m") 'osa-chrome-limit-marked)
@@ -477,7 +505,8 @@ Set this manually if auto-detection fails.")
     (define-key prefix-map (kbd "d") 'osa-chrome-limit-dup)
     (define-key prefix-map (kbd "a") 'osa-chrome-limit-active)
     (define-key prefix-map (kbd "/") 'osa-chrome-limit-none)
-    map))
+    map)
+  "Keymap for osa-chrome-mode.")
 
 (defun osa-chrome--self-insert-command ()
   (interactive)
@@ -497,6 +526,80 @@ Set this manually if auto-detection fails.")
 
 (defun osa-chrome-mode ()
   "Major mode for manipulating Google Chrome tabs.
+\\<osa-chrome-mode-map>
+Tabs are retrieved from Chrome and displayed in an Emacs buffer, one tab
+per line. Display takes place in ordered fashion, with tabs appearing as
+they are in Chrome, older ones before newer ones.
+
+Tabs can be further filtered in realtime by a user-specified regular
+expression and limited by certain criteria described below. This mode tries
+to remember the location of point and its associated tab so that it keeps
+that tab selected across filtering/limiting operations, assuming the tab
+is visible.
+
+To minimize the feedback loop, this mode does not use the minibuffer
+for input (e.g. when typing a filter regular expression).
+You can start typing immediately and the filter will be displayed on
+the header line.
+
+Other than regular keys being bound to `osa-chrome--self-insert-command',
+the following commands are available:
+
+Type \\[osa-chrome-visit-tab] to switch to tab at point in Chrome. This will bring Chrome
+into focus and raise the window that contains the tab. With a prefix
+argument, switch to the tab in Chrome but keep input focus in Emacs and
+do not raise Chrome window.
+
+Type \\[osa-chrome-retrieve-tabs] to retrieve tabs from Chrome.
+This wipes and recreates all tab state in Emacs but keeps the current
+filter and limit.
+
+Type \\[osa-chrome-goto-active] to move point to the next active tab.
+By repeatedly typing \\[osa-chrome-goto-active], you can cycle through all active tabs.
+
+Type \\[osa-chrome-reset-filter] to kill the current filter.
+
+Type \\[osa-chrome-toggle-url-view] to toggle tabs being shown as titles or URLs.
+
+Type \\[osa-chrome-toggle-timing] to toggle timing information on the header line.
+
+Type \\[osa-chrome-copy-url] to copy URL belonging to tab at point.
+
+Type \\[osa-chrome-view-source] to view HTML source of tab at point in side buffer.
+You need to enable `Allow JavaScript from Apple Events'
+under View->Developer in Chrome to use this command.
+
+Limiting tabs:
+
+Type \\[osa-chrome-limit-marked] to only show marked tabs.
+
+Type \\[osa-chrome-limit-dup] to only show duplicate tabs (by URL).
+
+Type \\[osa-chrome-limit-active] to only show active tabs (selected in Chrome).
+
+Type \\[osa-chrome-limit-pid] to only show tabs belonging to a specific Chrome
+instance by PID. You can't directly input the PID, by repeatedly typing \\[osa-chrome-limit-pid]
+you can cycle through all PIDs.
+
+Type \\[osa-chrome-limit-none] to remove the current limit and show all tabs.
+
+Marking and deleting:
+
+Type \\[osa-chrome-mark-tab] to mark tab at point.
+
+Type \\[osa-chrome-unmark-tab] to unmark tab at point.
+
+Type \\[osa-chrome-mark-all-tabs] to mark all tabs currently visible in Emacs.
+If there is a region, only mark tabs in region.
+
+Type \\[osa-chrome-unmark-all-tabs] to unmark all tabs currently visible in Emacs.
+If there is a region, only unmark tabs in region.
+
+Type \\[osa-chrome-delete-marked-tabs] to delete all marked tabs.
+
+Type \\[osa-chrome-delete-tab] to delete tab at point.
+
+Deleting a single or all marked tabs always triggers a full tab retrieval from Chrome.
 
 \\{osa-chrome-mode-map}"
   (interactive)
@@ -513,7 +616,7 @@ Set this manually if auto-detection fails.")
         font-lock-function (lambda (_) nil))
   (osa-chrome--init-caches)
   (osa-chrome--with-timing
-    (osa-chrome--refresh-tabs (osa-chrome-get-tabs))
+    (osa-chrome--reindex-tabs (osa-chrome-get-tabs))
     (osa-chrome--filter-tabs))
   (hl-line-mode)
   (run-mode-hooks 'osa-chrome-mode-hook))
@@ -525,10 +628,14 @@ Set this manually if auto-detection fails.")
 
 
 (defun osa-chrome-active-filter ()
+  "Return currently active filter string or nil."
   (when osa-chrome--active-filter
     (apply 'string (reverse osa-chrome--active-filter))))
 
 (defun osa-chrome-render-tab (tab)
+  "Return string representation of TAB.
+String is used as is to display TAB in *chrome-tabs* buffer.
+It must not span more than one line."
   (let ((url       (osa-chrome-tab-url tab))
         (title     (osa-chrome-tab-title tab))
         (is-active (osa-chrome-tab-is-active tab))
@@ -547,10 +654,8 @@ Set this manually if auto-detection fails.")
       str)))
 
 (defun osa-chrome-limit-tab (tab)
-  "Default limit function.
-Limits TAB by pid, duplicate, marked or active status depending on the value of
-`osa-chrome-default-limit' which can be changed using the `osa-chrome-limit-'
-functions (normally through their key bindings)."
+  "Limits TAB by pid, duplicate, marked or active status.
+Limiting operation depends on `osa-chrome-default-limit'."
   (cl-case osa-chrome-default-limit
     (:all    t)
     (:mark   (osa-chrome-tab-is-marked tab))
@@ -559,8 +664,7 @@ functions (normally through their key bindings)."
     (t (equal osa-chrome-default-limit (osa-chrome-tab-pid tab)))))
 
 (defun osa-chrome-filter-tab (tab)
-  "Default filter function.
-Filters TAB using a case-insensitive match on either URL or title."
+  "Filters TAB using a case-insensitive match on either URL or title."
   (let ((filter (osa-chrome-active-filter)))
     (or (null filter)
         (let ((case-fold-search t)
@@ -570,10 +674,12 @@ Filters TAB using a case-insensitive match on either URL or title."
               (string-match filter title))))))
 
 (defun osa-chrome-current-tab ()
+  "Return tab at point or nil."
   (gethash (line-number-at-pos (point))
            osa-chrome--visible-tabs))
 
 (defun osa-chrome-goto-tab (tab)
+  "Move point to TAB if it is visible."
   (when-let ((line (osa-chrome-tab-line tab)))
     (osa-chrome--goto-line line)))
 
@@ -606,6 +712,7 @@ and active-tab-ids."
 
 
 (defun osa-chrome-toggle-timing ()
+  "Toggle timing information on the header line."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (let ((timingp osa-chrome-show-timing))
@@ -613,7 +720,8 @@ and active-tab-ids."
     (setq osa-chrome--header-update t))
   (force-mode-line-update))
 
-(defun osa-chrome-toggle-view ()
+(defun osa-chrome-toggle-url-view ()
+  "Toggle tabs being displayed as titles or URLs."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (let ((view osa-chrome-default-view))
@@ -622,12 +730,16 @@ and active-tab-ids."
   (osa-chrome--filter-tabs))
 
 (defun osa-chrome-limit-marked ()
+  "Only show marked tabs."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (setq-local osa-chrome-default-limit :mark)
   (osa-chrome--filter-tabs))
 
 (defun osa-chrome-limit-pid ()
+  "Only show tabs belonging to a specific Chrome instance, by PID.
+You can't directly input the PID, by repeatedly invoking this command
+you can cycle through all PIDs."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (let* ((limit osa-chrome-default-limit)
@@ -641,18 +753,21 @@ and active-tab-ids."
     (osa-chrome--filter-tabs)))
 
 (defun osa-chrome-limit-dup ()
+  "Only show duplicate tabs (by URL)."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (setq-local osa-chrome-default-limit :dup)
   (osa-chrome--filter-tabs))
 
 (defun osa-chrome-limit-active ()
+  "Only show active tabs (selected in Chrome)."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (setq-local osa-chrome-default-limit :active)
   (osa-chrome--filter-tabs))
 
 (defun osa-chrome-limit-none ()
+  "Remove current limit and show all tabs."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (unless (eq :all osa-chrome-default-limit)
@@ -660,6 +775,7 @@ and active-tab-ids."
     (osa-chrome--filter-tabs)))
 
 (defun osa-chrome-copy-url ()
+  "Copy URL belonging to tab at point."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (when-let ((tab (osa-chrome-current-tab)))
@@ -667,17 +783,19 @@ and active-tab-ids."
       (kill-new url)
       (message "Copied: %s" url))))
 
-(defun osa-chrome-reload-tabs ()
-  "Retrieve and filter all Chrome tabs."
+(defun osa-chrome-retrieve-tabs ()
+  "Retrieve and filter all Chrome tabs.
+This wipes and recreates all tab state in Emacs but keeps the current filter
+and limit."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (osa-chrome--with-timing
     (setq osa-chrome--marked-tabs 0)
-    (osa-chrome--refresh-tabs (osa-chrome-get-tabs))
+    (osa-chrome--reindex-tabs (osa-chrome-get-tabs))
     (osa-chrome--filter-tabs)))
 
 (defun osa-chrome-reset-filter ()
-  "Reset active tab filter."
+  "Kill current tab filter."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (setq osa-chrome--active-filter nil)
@@ -696,6 +814,7 @@ and active-tab-ids."
                  :args (list (osa-chrome--machine-url) pid tab-ids)))
 
 (defun osa-chrome-delete-tab ()
+  "Delete tab at point."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (when-let ((tab (osa-chrome-current-tab)))
@@ -709,11 +828,11 @@ and active-tab-ids."
              (osa-chrome--delete-single tab-ids)
            (osa-chrome--delete-multi pid tab-ids))
          (forward-line)
-         (osa-chrome-reload-tabs)
+         (osa-chrome-retrieve-tabs)
          (message "Deleted %d tabs" (cdr (assoc "count" ret))))))))
 
 (defun osa-chrome-delete-marked-tabs ()
-  "Delete tab."
+  "Delete all marked tabs."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (when (> osa-chrome--marked-tabs 0)
@@ -736,10 +855,11 @@ and active-tab-ids."
                   (if osa-chrome-single-instance
                       (osa-chrome--delete-single grouped-tabs)
                     (osa-chrome--delete-multi pid grouped-tabs))
-                  (osa-chrome-reload-tabs)
+                  (osa-chrome-retrieve-tabs)
                   (message "Deleted %d tabs" (cdr (assoc "count" ret)))))))))
 
 (defun osa-chrome-mark-tab (&optional tab)
+  "Mark tab at point."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (let ((move-forward (if tab nil t)))
@@ -755,6 +875,7 @@ and active-tab-ids."
       (when move-forward (forward-line)))))
 
 (defun osa-chrome-unmark-tab (&optional tab)
+  "Unmark tab at point."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (let ((move-forward (if tab nil t)))
@@ -770,6 +891,7 @@ and active-tab-ids."
       (when move-forward (forward-line)))))
 
 (defsubst osa-chrome-do-visible-tabs (function)
+  "Call FUNCTION once for each visible tab, passing tab as an argument."
   (mapc function
         (if (region-active-p)
             (save-excursion
@@ -782,11 +904,15 @@ and active-tab-ids."
           (hash-table-values osa-chrome--visible-tabs))))
 
 (defun osa-chrome-mark-all-tabs ()
+  "Mark all tabs currently visible in Emacs.
+If there is a region, only mark tabs in region."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (osa-chrome-do-visible-tabs #'osa-chrome-mark-tab))
 
 (defun osa-chrome-unmark-all-tabs ()
+  "Unmark all tabs currently visible in Emacs.
+If there is a region, only unmark tabs in region."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (osa-chrome-do-visible-tabs #'osa-chrome-unmark-tab))
@@ -807,6 +933,9 @@ and active-tab-ids."
                              pid window-id tab-id)))
 
 (defun osa-chrome-view-source ()
+  "View HTML source of tab at point in side buffer.
+You need to enable `Allow JavaScript from Apple Events' under View->Developer
+in Chrome to use this command."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (when-let ((tab (osa-chrome-current-tab)))
@@ -842,6 +971,10 @@ and active-tab-ids."
                              tab-id (not noraise))))
 
 (defun osa-chrome-visit-tab (&optional noraise)
+  "Switch to tab at point in Chrome.
+This will bring Chrome into focus and raise the window that contains the tab.
+With a prefix argument, switch to the tab in Chrome but keep input focus in
+Emacs and do not raise Chrome window."
   (interactive "P")
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (when-let ((tab (osa-chrome-current-tab)))
@@ -853,7 +986,7 @@ and active-tab-ids."
           (if osa-chrome-single-instance
               (osa-chrome--visit-tab-single window-id tab-id noraise)
             (osa-chrome--visit-tab-multi pid window-id tab-id noraise))
-          (if osa-chrome-auto-reload (osa-chrome-reload-tabs)
+          (if osa-chrome-auto-retrieve (osa-chrome-retrieve-tabs)
             ;; Need to manually mark the current tab as active and the
             ;; previously active tab in this window as inactive then render
             ;; both of them.
@@ -864,8 +997,7 @@ and active-tab-ids."
               (osa-chrome--render-tab tab t)
               ;; Search for previously active tab in this window, mark it as
               ;; inactive and if it's visible render it.
-              (cl-loop with tabs = (cdr (gethash pid osa-chrome--process-index))
-                       for tab in tabs
+              (cl-loop for tab in (cdr (gethash pid osa-chrome--process-index))
                        for tid = (osa-chrome-tab-id tab)
                        for wid = (osa-chrome-tab-window-id tab) do
                        (when (and (= wid window-id)
@@ -880,6 +1012,8 @@ and active-tab-ids."
               (goto-char pos))))))))
 
 (defun osa-chrome-goto-active ()
+  "Move point to the next active tab.
+By repeatedly invoking this command, you can cycle through all active tabs."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (when (> (hash-table-count osa-chrome--visible-tabs) 0)

@@ -58,7 +58,7 @@ Requires [[https://github.com/atomontage/osa][osa.el]].
 #+BEGIN_SRC emacs-lisp
 M-x osa-chrome
 
-C-h m ; to see default keybindings.
+C-h m ; to see mode documentation and default keybindings.
 #+END_SRC
 
 I don't use or have plans to add direct support for Helm or other similar
