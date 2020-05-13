@@ -670,8 +670,8 @@ Limiting operation depends on `osa-chrome-default-limit'."
         (let ((case-fold-search t)
               (url   (osa-chrome-tab-url tab))
               (title (osa-chrome-tab-title tab)))
-          (or (string-match filter url)
-              (string-match filter title))))))
+          (or (string-match (replace-regexp-in-string " " ".*" filter) url)
+              (string-match (replace-regexp-in-string " " ".*" filter) title))))))
 
 (defun osa-chrome-current-tab ()
   "Return tab at point or nil."
