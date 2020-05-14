@@ -32,7 +32,6 @@ function delete_tabs_single(chrome_app_name, tab_ids)
     }
 
     return {
-        'error'      : 'Process not found',
-        'error-data' : '',
+        'error' : 'Process not found',
     };
 }

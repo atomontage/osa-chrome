@@ -301,12 +301,12 @@ TABS must be an alist as returned from `osa-chrome-get-tabs'."
         (err-data (cl-gensym)))
     `(let* ((osa-strict-unpacking t)
             (,res ,call))
-       (if-let ((,err      (cdr (assoc "error" ,res)))
-                (,err-data (cdr (assoc "error-data" ,res))))
-           (osa-chrome--message "%s%s" ,err
-                                (if ,err-data
-                                    (format " [%s]" ,err-data)
-                                  ""))
+       (if-let ((,err       (cdr (assoc "error" ,res))))
+           (let ((,err-data (cdr (assoc "error-data" ,res))))
+            (osa-chrome--message "%s%s" ,err
+                                 (if ,err-data
+                                     (format " [%s]" ,err-data)
+                                   "")))
          ,@body))))
 
 
@@ -986,6 +986,8 @@ Emacs and do not raise Chrome window."
           (if osa-chrome-single-instance
               (osa-chrome--visit-tab-single window-id tab-id noraise)
             (osa-chrome--visit-tab-multi pid window-id tab-id noraise))
+          (when-let ((warn (cdr (assoc "warn" ret))))
+            (osa-chrome--message "%s" warn))
           (if osa-chrome-auto-retrieve (osa-chrome-retrieve-tabs)
             ;; Need to manually mark the current tab as active and the
             ;; previously active tab in this window as inactive then render

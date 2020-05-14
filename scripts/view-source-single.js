@@ -33,7 +33,6 @@ function view_source_single(chrome_app_name, window_id, tab_id)
     }
 
     return {
-        'error'      : 'Process not found',
-        'error-data' : '',
+        'error' : 'Process not found',
     };
 }

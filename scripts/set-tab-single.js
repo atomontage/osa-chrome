@@ -37,6 +37,13 @@ function set_tab_single(chrome_app_name, window_id, tab_id, raise)
                 chrome.activate();
             } else {
                 let proc = se.processes[name];
+
+                if (proc.windows.length == 0) {
+                    return {
+                        'warn' : "System Events does not allow focusing Chrome window in non-currently-visible space",
+                    };
+                }
+
                 proc.windows[0].actions['AXRaise'].perform();
                 proc.frontmost = true;
             }
@@ -46,7 +53,6 @@ function set_tab_single(chrome_app_name, window_id, tab_id, raise)
     }
 
     return {
-        'error'      : 'Process not found',
-        'error-data' : '',
+        'error' : 'Process not found',
     };
 }

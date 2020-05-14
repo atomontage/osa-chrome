@@ -63,6 +63,11 @@ M-x osa-chrome
 C-h m ; to see mode documentation and default keybindings.
 #+END_SRC
 
+If you have Chrome windows spread out across multiple spaces, you will not
+be able to focus/raise windows that exist in non-currently-visible spaces.
+This seems to be a "System Events" limitation, since it doesn't expose the
+necessary functionality. Do let me know if you have a workaround.
+
 I don't use or have plans to add direct support for Helm or other similar
 completion frameworks. That can be easily accomplished and kept external to the
 package, through the Emacs Lisp API that osa-chrome.el exposes.

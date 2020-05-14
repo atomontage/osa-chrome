@@ -36,6 +36,13 @@ function set_tab_multi(machine_url, pid, window_id, tab_id, raise)
                 chrome.activate();
             } else {
                 let proc = se.processes.whose({unixId: pid})[0];
+
+                if (proc.windows.length == 0) {
+                    return {
+                        'warn' : "System Events does not allow focusing Chrome window in non-currently-visible space",
+                    };
+                }
+
                 proc.windows[0].actions['AXRaise'].perform();
                 proc.frontmost = true;
             }
