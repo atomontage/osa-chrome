@@ -577,8 +577,8 @@ Type \\[osa-chrome-limit-dup] to only show duplicate tabs (by URL).
 Type \\[osa-chrome-limit-active] to only show active tabs (selected in Chrome).
 
 Type \\[osa-chrome-limit-pid] to only show tabs belonging to a specific Chrome
-instance by PID. Since you can't directly input the PID, by repeatedly typing \\[osa-chrome-limit-pid]
-you can cycle through all PIDs.
+instance by PID. Since you can't directly input the PID,
+by repeatedly typing \\[osa-chrome-limit-pid] you can cycle through all PIDs.
 
 Type \\[osa-chrome-limit-none] to remove the current limit and show all tabs.
 
@@ -598,7 +598,8 @@ Type \\[osa-chrome-delete-marked-tabs] to delete all marked tabs.
 
 Type \\[osa-chrome-delete-tab] to delete tab at point.
 
-Deleting a single or all marked tabs always triggers a full tab retrieval from Chrome.
+Deleting a single or all marked tabs always triggers a full
+tab retrieval from Chrome.
 
 \\{osa-chrome-mode-map}"
   (interactive)
