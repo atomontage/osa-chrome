@@ -58,6 +58,14 @@ to shorten the feedback loop as much as possible (e.g. by not using the minibuff
 Requires [[https://github.com/atomontage/osa][osa.el]].
 
 #+BEGIN_SRC emacs-lisp
+;; Ensure directory of osa-chrome.el is in your load-path and add
+;; the following to your init file:
+(require 'osa-chrome)
+#+END_SRC
+
+Interactively
+
+#+BEGIN_SRC emacs-lisp
 M-x osa-chrome
 
 C-h m ; to see mode documentation and default keybindings.
