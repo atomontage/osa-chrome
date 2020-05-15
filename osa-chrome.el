@@ -614,6 +614,7 @@ tab retrieval from Chrome.
         buffer-read-only t
         header-line-format '(:eval (funcall osa-chrome--header-function))
         font-lock-function (lambda (_) nil))
+  (setq-local revert-buffer-function #'osa-chrome-revert-buffer)
   (osa-chrome--init-caches)
   (osa-chrome--with-timing
     (osa-chrome--reindex-tabs (osa-chrome-get-tabs))
@@ -626,6 +627,12 @@ tab retrieval from Chrome.
 ;;; API
 ;;;
 
+
+(cl-defun osa-chrome-revert-buffer (_ noconfirm)
+  (unless noconfirm
+    (unless (y-or-n-p "Revert buffer by retrieving tabs from Chrome? ")
+      (cl-return-from 'osa-chrome-revert-buffer)))
+  (osa-chrome-retrieve-tabs))
 
 (defun osa-chrome-active-filter ()
   "Return currently active filter string or nil."
