@@ -3,10 +3,11 @@
 ;; Copyright (C) 2020 xristos@sdf.org
 ;; All rights reserved
 
-;; Version: 0.5 - 2020-05-10
+;; Modified: 2020-05-10
+;; Version: 0.5
 ;; Author: xristos <xristos@sdf.org>
 ;; URL: https://github.com/atomontage/osa-chrome
-;; Package-Requires: ((emacs "25") osa)
+;; Package-Requires: ((emacs "25.1") osa)
 ;; Keywords: comm
 
 ;; Redistribution and use in source and binary forms, with or without
