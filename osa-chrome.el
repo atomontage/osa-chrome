@@ -36,15 +36,19 @@
 
 ;;; Commentary:
 ;;
-;; Remotely manage tabs belonging to one or more Chrome processes.
+;; osa-chrome.el is an Emacs Mac port interface to Google Chrome.
+;;
+;; The current focus is on ultra-fast tab manipulation that scales to huge
+;; numbers of tabs. More functionality may be added in future releases.
 ;;
 ;; Communication takes place over Apple Events using osa.el
+;;
+;; Please see README.org for documentation.
 ;;
 ;;; Usage:
 ;;
 ;; M-x osa-chrome
-;;
-;; Please see README.org for documentation.
+
 
 ;;; Code:
 
@@ -96,8 +100,8 @@ Chrome instances. You need to enable Remote Apple Events for this, as
 described in the documentation.")
 
 (defvar osa-chrome-machine-url ""
-  "This is only needed when `osa-chrome-single-instance' is nil and used
-to setup targeting for multiple Chrome processes through Remote Apple Events.
+  "Used to control multiple Chrome processes through Remote Apple Events.
+Only needed when `osa-chrome-single-instance' is nil.
 
 It can either be empty or a complete eppc://user:password@host string.
 If it's empty, an auth source search query is done to retrieve values.
@@ -507,9 +511,10 @@ Otherwise, a new string is generated and returned by calling
     (define-key prefix-map (kbd "a") 'osa-chrome-limit-active)
     (define-key prefix-map (kbd "/") 'osa-chrome-limit-none)
     map)
-  "Keymap for osa-chrome-mode.")
+  "Keymap for `osa-chrome-mode'.")
 
 (defun osa-chrome--self-insert-command ()
+  "Like `self-insert-command' but used to create active filter."
   (interactive)
   (let ((event last-input-event)
         updated)
@@ -867,7 +872,7 @@ and limit."
                   (message "Deleted %d tabs" (cdr (assoc "count" ret)))))))))
 
 (defun osa-chrome-mark-tab (&optional tab)
-  "Mark tab at point."
+  "Mark TAB at point."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (let ((move-forward (if tab nil t)))
@@ -883,7 +888,7 @@ and limit."
       (when move-forward (forward-line)))))
 
 (defun osa-chrome-unmark-tab (&optional tab)
-  "Unmark tab at point."
+  "Unmark TAB at point."
   (interactive)
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (let ((move-forward (if tab nil t)))
@@ -981,8 +986,8 @@ in Chrome to use this command."
 (defun osa-chrome-visit-tab (&optional noraise)
   "Switch to tab at point in Chrome.
 This brings Chrome into focus and raises the window that contains the tab.
-With a prefix argument, switch to the tab in Chrome but keep input focus in
-Emacs and do not raise Chrome window."
+With a prefix argument NORAISE, switch to the tab in Chrome but keep input
+focus in Emacs and do not raise Chrome window."
   (interactive "P")
   (cl-assert (eq major-mode 'osa-chrome-mode) t)
   (when-let ((tab (osa-chrome-current-tab)))
@@ -1054,6 +1059,7 @@ By repeatedly invoking this command, you can cycle through all active tabs."
              ;; No active tab found, go to starting position
              finally (goto-char pos))))
 
+;;;###autoload
 (defun osa-chrome ()
   "Google Chrome remote tab control."
   (interactive)
