@@ -201,6 +201,9 @@ Older tabs before newer tabs.")
 Keys are conses of form: (pid . tab-id)
 Values are osa-chrome-tab instances.")
 
+(defvar-local osa-chrome--header-update nil)
+(defvar-local osa-chrome--header-cache nil)
+
 (defun osa-chrome--reindex-tabs (tabs)
   "Index TABS into `osa-chrome--process-index' and `osa-chrome--cached-tabs'.
 TABS must be an alist as returned from `osa-chrome-get-tabs'."
@@ -450,9 +453,6 @@ TABS must be an alist as returned from `osa-chrome-get-tabs'."
                  (propertize filter
                              'help-echo "Search filter"
                              'face 'osa-chrome-tab-filter-face)))))))
-
-(defvar-local osa-chrome--header-update nil)
-(defvar-local osa-chrome--header-cache nil)
 
 (defun osa-chrome--header ()
   "Return string for tab view header line.
