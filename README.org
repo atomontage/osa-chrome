@@ -54,15 +54,18 @@ in order to minimize communication roundtrips.
 I used the excellent [[https://github.com/skeeto/elfeed][Elfeed]] as an inspiration for the user interface, and tried
 to shorten the feedback loop as much as possible (e.g. by not using the minibuffer).
 
-* Usage
+* Install
 Requires [[https://github.com/atomontage/osa][osa.el]].
 
+Simple and most flexible method:
+
 #+BEGIN_SRC emacs-lisp
-;; Ensure directory of osa-chrome.el is in your load-path and add
-;; the following to your init file:
+;; Clone this repository, ensure directory of osa-chrome.el is in your
+;; load-path and add the following to your init file:
 (require 'osa-chrome)
 #+END_SRC
 
+* Usage
 Interactively
 
 #+BEGIN_SRC emacs-lisp
