@@ -7,7 +7,7 @@
 ;; Version: 0.5
 ;; Author: xristos <xristos@sdf.org>
 ;; URL: https://github.com/atomontage/osa-chrome
-;; Package-Requires: ((emacs "25.1") osa)
+;; Package-Requires: ((emacs "25.1") (osa "1.0"))
 ;; Keywords: comm
 
 ;; Redistribution and use in source and binary forms, with or without
@@ -175,7 +175,7 @@ Set this manually if auto-detection fails.")
   (title     nil :read-only t)    ; Title of tab
   is-active                       ; Is tab selected in OSA Chrome buffer?
   is-marked                       ; Is tab marked in Emacs?
-  is-duplicate                    ; Is tab a dupicate of another? (based on URL)
+  is-duplicate                    ; Is tab a duplicate of another? (based on URL)
   line)                           ; Tab line number in OSA Chrome buffer
 
 
@@ -643,7 +643,7 @@ tab retrieval from Chrome.
 (defun osa-chrome-active-filter ()
   "Return currently active filter string or nil."
   (when osa-chrome--active-filter
-    (apply 'string (reverse osa-chrome--active-filter))))
+    (apply #'string (reverse osa-chrome--active-filter))))
 
 (defun osa-chrome-render-tab (tab)
   "Return string representation of TAB.
