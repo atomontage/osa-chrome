@@ -1,4 +1,5 @@
 [[https://opensource.org/licenses/BSD-2-Clause][https://img.shields.io/badge/license-BSD-blue.svg]]
+[[https://melpa.org/#/osa-chrome][https://melpa.org/packages/osa-chrome-badge.svg]]
 
 osa-chrome.el is an Emacs Mac port interface to Google Chrome.
 
@@ -64,6 +65,9 @@ Simple and most flexible method:
 ;; load-path and add the following to your init file:
 (require 'osa-chrome)
 #+END_SRC
+
+Alternatively, you can install through [[https://melpa.org/][MELPA]] or some other Emacs package
+manager.
 
 * Usage
 Interactively
