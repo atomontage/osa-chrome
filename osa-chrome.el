@@ -622,10 +622,10 @@ tab retrieval from Chrome.
         font-lock-function (lambda (_) nil))
   (setq-local revert-buffer-function #'osa-chrome-revert-buffer)
   (osa-chrome--init-caches)
+  (hl-line-mode 1)
   (osa-chrome--with-timing
     (osa-chrome--reindex-tabs (osa-chrome-get-tabs))
     (osa-chrome--filter-tabs))
-  (hl-line-mode)
   (run-mode-hooks 'osa-chrome-mode-hook))
 
 
