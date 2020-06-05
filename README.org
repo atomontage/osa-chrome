@@ -87,9 +87,10 @@ I don't use or have plans to add direct support for Helm or other similar
 completion frameworks. That can be easily accomplished and kept external to the
 package, through the Emacs Lisp API that osa-chrome.el exposes.
 
-If you know how to replace Apple Events with equivalent functionality on Linux,
-do let me know and I can turn this into a cross-platform mode, assuming it makes
-sense to do so.
+Together with [[https://github.com/anticomputer][Bas Alberts]], we ported most of the
+functionality of osa-chrome.el to effectively every operating system that Chrome
+and Emacs run on, using the DevTools protocol provided by Chrome:
+[[https://github.com/anticomputer/chrome.el][chrome.el]].
 
 Regarding other browsers, Firefox does not expose _any_ OSA endpoints whatsoever
 and Safari does not expose unique tab ids. Writing a similar mode for Safari
