@@ -852,24 +852,34 @@ and limit."
     (osa-chrome--with-timing
       (cl-loop
        for pid being the hash-keys of osa-chrome--process-index
-       for process-tabs = (cdr (gethash pid osa-chrome--process-index))
-       for grouped-tabs = nil do
+       for process-tabs      = (cdr (gethash pid osa-chrome--process-index))
+       for grouped-tabs      = nil
+       with grouped-tab-list = nil do
        (cl-loop for tab in process-tabs
                 when (osa-chrome-tab-is-marked tab) do
                 (let ((window-id (osa-chrome-tab-window-id tab)))
                   (push (osa-chrome-tab-id tab)
                         (alist-get window-id grouped-tabs)))
                 finally do
-                (setq grouped-tabs
-                      (cons :reco
-                            (mapcar (lambda (c) (cons (car c) (vconcat (cdr c))))
-                                    grouped-tabs)))
-                (osa-chrome--check-error (ret)
-                  (if osa-chrome-single-instance
-                      (osa-chrome--delete-single grouped-tabs)
-                    (osa-chrome--delete-multi pid grouped-tabs))
-                  (osa-chrome-retrieve-tabs)
-                  (message "Deleted %d tabs" (cdr (assoc "count" ret)))))))))
+                (when grouped-tabs
+                  (setq grouped-tabs
+                        (cons :reco
+                              (mapcar (lambda (c) (cons (car c) (vconcat (cdr c))))
+                                      grouped-tabs)))
+                  (push (cons pid grouped-tabs) grouped-tab-list)))
+       finally do
+       (cl-loop
+        with deleted-tab-count = 0
+        for pid-count from 0
+        for (pid . grouped-tabs) in grouped-tab-list do
+        (osa-chrome--check-error (ret)
+          (if osa-chrome-single-instance
+              (osa-chrome--delete-single grouped-tabs)
+            (osa-chrome--delete-multi pid grouped-tabs))
+          (cl-incf deleted-tab-count (cdr (assoc "count" ret))))
+        finally do
+        (message "Deleted %d tabs from %d processes" deleted-tab-count pid-count)
+        (osa-chrome-retrieve-tabs))))))
 
 (defun osa-chrome-mark-tab (&optional tab)
   "Mark TAB at point."
