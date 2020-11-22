@@ -165,6 +165,12 @@ Delete operations always trigger a tab retrieval post-operation.")
   "Directory that contains JXA Chrome control scripts.
 Set this manually if auto-detection fails.")
 
+(defvar osa-chrome-buffer-name "*chrome-tabs*"
+  "Name of buffer created to display tabs.")
+
+(defvar osa-chrome-buffer-source-name "*chrome-source*"
+  "Name of buffer created to display HTML source.")
+
 (cl-defstruct (osa-chrome-tab
                (:constructor osa-chrome-tab-create)
                (:copier nil))
@@ -522,7 +528,7 @@ Otherwise, a new string is generated and returned by calling
            (if (and (= 127 event)
                     (not (display-graphic-p)))
                (pop osa-chrome--active-filter)
-               (push event osa-chrome--active-filter))
+             (push event osa-chrome--active-filter))
            (setq updated t))
           ((eql event 'backspace)
            (pop osa-chrome--active-filter)
@@ -647,7 +653,7 @@ tab retrieval from Chrome.
 
 (defun osa-chrome-render-tab (tab)
   "Return string representation of TAB.
-String is used as is to display TAB in *chrome-tabs* buffer.
+String is used as is to display TAB in `osa-chrome-buffer-name' buffer.
 It must not span more than one line but it may contain text properties."
   (let ((url       (osa-chrome-tab-url tab))
         (title     (osa-chrome-tab-title tab))
@@ -971,7 +977,7 @@ in Chrome to use this command."
           (if osa-chrome-single-instance
               (osa-chrome--view-source-single window-id tab-id)
             (osa-chrome--view-source-multi pid window-id tab-id))
-          (let ((buf (get-buffer-create "*chrome-source*")))
+          (let ((buf (get-buffer-create osa-chrome-buffer-source-name)))
             (with-current-buffer buf
               (erase-buffer)
               (insert (cdr (assoc "html" ret)))
@@ -1073,7 +1079,7 @@ By repeatedly invoking this command, you can cycle through all active tabs."
 (defun osa-chrome ()
   "Google Chrome remote tab control."
   (interactive)
-  (let ((buf (get-buffer-create "*chrome-tabs*")))
+  (let ((buf (get-buffer-create osa-chrome-buffer-name)))
     (switch-to-buffer buf)
     (unless (eq major-mode 'osa-chrome-mode)
       (osa-chrome-mode))))
