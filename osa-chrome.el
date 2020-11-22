@@ -165,10 +165,10 @@ Delete operations always trigger a tab retrieval post-operation.")
   "Directory that contains JXA Chrome control scripts.
 Set this manually if auto-detection fails.")
 
-(defvar osa-chrome-buffer-name "*chrome-tabs*"
+(defvar osa-chrome-buffer-name "*osa-chrome-tabs*"
   "Name of buffer created to display tabs.")
 
-(defvar osa-chrome-buffer-source-name "*chrome-source*"
+(defvar osa-chrome-buffer-source-name "*osa-chrome-source*"
   "Name of buffer created to display HTML source.")
 
 (cl-defstruct (osa-chrome-tab
