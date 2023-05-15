@@ -242,7 +242,7 @@ TABS must be an alist as returned from `osa-chrome-get-tabs'."
      (let ((tab (osa-chrome-tab-create :pid pid :id tab-id :url url
                                        :title title
                                        :window-id window-id
-                                       :is-active (= tab-id active-tab-id))))
+                                       :is-active (equal tab-id active-tab-id))))
        (push tab process-tabs)
        (cl-incf tab-count)
        (if (gethash url seen-urls)
@@ -1031,9 +1031,9 @@ focus in Emacs and do not raise Chrome window."
               (cl-loop for tab in (cdr (gethash pid osa-chrome--process-index))
                        for tid = (osa-chrome-tab-id tab)
                        for wid = (osa-chrome-tab-window-id tab) do
-                       (when (and (= wid window-id)
+                       (when (and (equal wid window-id)
                                   ;; Skip currently active tab
-                                  (/= tid tab-id)
+                                  (not (equal tid tab-id))
                                   (osa-chrome-tab-is-active tab))
                          (setf (osa-chrome-tab-is-active tab) nil)
                          (when (gethash (osa-chrome-tab-line tab)
