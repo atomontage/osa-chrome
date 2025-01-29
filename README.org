@@ -17,7 +17,7 @@ of tabs. More functionality may be added in future releases.
 + Setting the current tab, optionally switching focus to Chrome, for any tab
   from any window belonging to any currently running Chrome process.
 
-+ Custom tab views: by pid, duplicates, marked, active. Independent from filtering.
++ Custom tab views: by PID, duplicates, marked, active. Independent from filtering.
 
 + Filters, views and tab display can be extended or replaced with alternative
   implementations.
@@ -38,10 +38,11 @@ of tabs. More functionality may be added in future releases.
 
 * Performance
 osa-chrome.el was designed upfront with heavy emphasis on performance. I use
-Chrome through my [[https://github.com/atomontage/chrome-private][chrome-private]] wrapper and generate hundreds of disposable
-profiles every day. Some of these profiles are segmented / tied to particular
-areas of research and kept around for as long as they're needed. They can grow
-to contain hundreds and add up to thousands of tabs in total.
+multiple Chrome-based browsers through my [[https://github.com/atomontage/chrome-private][chrome-private]] wrapper and generate
+hundreds of disposable profiles every day. Some of these profiles are
+segmented / tied to particular areas of research and kept around for as long
+as they're needed. They can grow to contain hundreds and add up to thousands
+of tabs in total.
 
 osa-chrome.el allows me to keep up with this volume of information and
 effortlessly manipulate it since it's at least an order of magnitude faster
@@ -49,9 +50,9 @@ than the alternatives: Rather that calling out to a separate ~osascript~ process
 and either parsing strings or JSON, osa-chrome.el works directly on top of Apple
 Events through an [[https://github.com/atomontage/osa][Emacs Lisp bridge]].
 
-The JXA code that is used to interface with Chrome has been written from scratch
-to take full advantage of batch operations and lazy-evaluation through selectors
-in order to minimize communication roundtrips.
+I wrote the JXA code that is used to interface with Chrome from scratch to take
+full advantage of batch operations and lazy-evaluation through selectors in order
+to minimize communication round-trips.
 
 I used the excellent [[https://github.com/skeeto/elfeed][Elfeed]] as an inspiration for the user interface, and tried
 to shorten the feedback loop as much as possible (e.g. by not using the minibuffer).
@@ -103,22 +104,23 @@ The default configuration uses "Google Chrome", "Chromium" and "Google Chrome Ca
 as the application names and operates in single instance mode. See
 [[https://github.com/atomontage/osa-chrome/blob/2e5a7bad4a43491e01a1d29770dcd42fe554aa22/osa-chrome.el#L88][osa-chrome-application-name]] for more information.
 
-If you're operating in single instance mode and using Chromium, you'll need to either
-reorder this list to have "Chromium" first or set ~osa-chrome-application-name~
-to "Chromium"). Single instance mode means that tabs will be retrieved from a single
-Chrome instance (including all windows belonging to that instance). If you don't
-run multiple independent Chrome instances, this is what you want and no further
-configuration is needed.
+If you're operating in single instance mode and using Chromium instead of Google Chrome,
+you'll need to either reorder this list to have "Chromium" first or set
+~osa-chrome-application-name~ to "Chromium". Single instance mode means that tabs
+will be retrieved from a single Chrome instance (including all windows belonging
+to that instance). If you don't want to control multiple independent Chrome instances,
+no further configuration is needed.
 
-If you use my [[https://github.com/atomontage/chrome-private][chrome-private]] wrapper or run concurrent independent Chrome
-instances, you need to set ~osa-chrome-single-instance~ to nil and enable
-Remote Apple Events in System Preferences -> Sharing which should also be
-restricted to a specific user (will require authentication over TLS). You can
-also enable the firewall and either tick "Block all incoming connections" or
-add a custom PF anchor for fine-grained control. Finally, you need to
-configure ~osa-chrome-machine-url~ by either:
+If you use my [[https://github.com/atomontage/chrome-private][chrome-private]] wrapper / want to control concurrent independent
+Chrome instances or different Chrome-based browsers at the same time, you need
+to set ~osa-chrome-single-instance~ to nil and enable Remote Apple Events
+in System Preferences -> Sharing which should also be restricted to a
+specific user (will require authentication over TLS). You can also enable
+the firewall and either tick "Block all incoming connections" or add a custom
+PF anchor for fine-grained control. Finally, you need to configure
+~osa-chrome-machine-url~ by either:
 
-+ Leaving it empty but having an appropriate entry in authinfo:
++ Leaving it empty but having an appropriate entry in ~authinfo~:
 
 #+BEGIN_SRC emacs-lisp
 machine localhost port eppc login user password pass
@@ -134,7 +136,8 @@ or
 It is unfortunate that one has to go through all these steps, but enabling
 Remote Apple Events is the only way I know of that allows for per-PID
 application control. Finally, let me reiterate that this is not needed unless
-one is using multiple independent Chrome instances at the same time.
+one wants to control multiple independent Chrome instances / Chrome-based
+browsers at the same time.
 
 * Note
 Does not work with official GNU Emacs for macOS (or emacsformacosx.com) as it
