@@ -11,7 +11,8 @@ of tabs. More functionality may be added in future releases.
 * Features
 
 + Fetching all tabs (URLs/titles) from all windows belonging to all
-  currently running Chrome processes.
+  currently running Chrome processes. Supports different process names,
+  for example Chrome, Chromium and Chrome Canary running at the same time.
 
 + Setting the current tab, optionally switching focus to Chrome, for any tab
   from any window belonging to any currently running Chrome process.
@@ -98,12 +99,14 @@ is possible but lack of unique ids means more complicated code, and since I am
 not using Safari, I have no incentive to support it.
 
 * Configuration
-The default configuration will use "Google Chrome" as the application name and
-operate in single instance mode. If you are using Google Chrome Canary, change
-~osa-chrome-application-name~ accordingly.
+The default configuration uses "Google Chrome", "Chromium" and "Google Chrome Canary"
+as the application names and operates in single instance mode. See
+[[https://github.com/atomontage/osa-chrome/blob/04d7cceb5cbbd7bbb4af0d26c20802d6c6dfa52f/osa-chrome.el#L88][osa-chrome-application-name]] for more information.
 
-Single instance mode means that tabs will be retrieved from a single Chrome
-instance (including all windows belonging to that instance). If you don't
+If you're operating in single instance mode and using Chromium, you'll need to either
+reorder this list to have "Chromium" first or set ~osa-chrome-application-name~
+to "Chromium"). Single instance mode means that tabs will be retrieved from a single
+Chrome instance (including all windows belonging to that instance). If you don't
 run multiple independent Chrome instances, this is what you want and no further
 configuration is needed.
 
