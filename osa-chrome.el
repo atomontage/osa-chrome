@@ -87,11 +87,11 @@
 
 (defvar osa-chrome-application-name
   '("Google Chrome" "Chromium" "Google Chrome Canary")
-  "Process names to use when retrieving Google application reference.
+  "Process names to use when retrieving application reference.
 This can be a list of process names or a single process name (string).
 
-If a list and `osa-chrome-single-instance' is nil, get all tabs from all
-running Chrome processes matching names. If `osa-chrome-single-instance'
+If it's a list and `osa-chrome-single-instance' is nil, get all tabs from
+all running Chrome processes matching names. If `osa-chrome-single-instance'
 is non-nil, use the first process name in the list.")
 
 (defvar osa-chrome-single-instance t
