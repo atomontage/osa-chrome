@@ -133,6 +133,9 @@ filter can be retrieved by calling `osa-chrome-active-filter'.")
 
 This can be toggled by `osa-chrome-toggle-timing'.")
 
+(defvar osa-chrome-retrieve-on-init t
+  "If non-nil, retrieve all tabs after running `osa-chrome-mode-hook'.")
+
 (defvar osa-chrome-default-view :title
   "Show tab titles when equal to :title, URLs otherwise.
 This can be toggled by `osa-chrome-toggle-url-view'.")
@@ -629,10 +632,11 @@ tab retrieval from Chrome.
   (setq-local revert-buffer-function #'osa-chrome-revert-buffer)
   (osa-chrome--init-caches)
   (hl-line-mode 1)
+  (run-mode-hooks 'osa-chrome-mode-hook)
   (osa-chrome--with-timing
-    (osa-chrome--reindex-tabs (osa-chrome-get-tabs))
-    (osa-chrome--filter-tabs))
-  (run-mode-hooks 'osa-chrome-mode-hook))
+    (osa-chrome--reindex-tabs
+     (if osa-chrome-retrieve-on-init (osa-chrome-get-tabs) nil))
+    (osa-chrome--filter-tabs)))
 
 
 ;;;
