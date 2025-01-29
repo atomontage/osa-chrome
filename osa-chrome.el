@@ -85,19 +85,25 @@
   ""
   :group 'osa-chrome)
 
-(defvar osa-chrome-application-name "Google Chrome"
-  "Name to use when retrieving application instance reference.
-Change this if you are using Google Chrome Canary.")
+(defvar osa-chrome-application-name
+  '("Google Chrome" "Chromium" "Google Chrome Canary")
+  "Process names to use when retrieving Google application reference.
+This can be a list of process names or a single process name (string).
+
+If a list and `osa-chrome-single-instance' is nil, get all tabs from all
+running Chrome processes matching names. If `osa-chrome-single-instance'
+is non-nil, use the first process name in the list.")
 
 (defvar osa-chrome-single-instance t
-  "If non-nil, get all tabs from all windows from a single Chrome instance.
+  "If non-nil, get all tabs from all windows of a single Chrome instance.
 This is the simplest and most common scenario requiring no extra
 configuration, but in the case where multiple Chrome instances are running,
 it is not possible to choose which one will be used.
 
 If nil, get all tabs from all windows belonging to all currently running
-Chrome instances. You need to enable Remote Apple Events for this, as
-described in the documentation.")
+Chrome instances with process names listed in `osa-chrome-application-name'.
+You need to enable Remote Apple Events for this, as described in the
+documentation.")
 
 (defvar osa-chrome-machine-url ""
   "Used to control multiple Chrome processes through Remote Apple Events.
@@ -724,8 +730,13 @@ and active-tab-ids."
       (if osa-chrome-single-instance "get-tabs-single.js" "get-tabs-multi.js"))
      :lang "JavaScript"
      :call (if osa-chrome-single-instance "get_tabs_single" "get_tabs_multi")
-     :args (list osa-chrome-application-name
-                 (unless osa-chrome-single-instance (osa-chrome--machine-url))))
+     :args (cond (osa-chrome-single-instance
+                  (list (if (listp osa-chrome-application-name)
+                            (car osa-chrome-application-name)
+                          osa-chrome-application-name)))
+                 (t
+                  (list (cons :list osa-chrome-application-name)
+                        (osa-chrome--machine-url)))))
     ret))
 
 
@@ -828,7 +839,10 @@ and limit."
   (osa-eval-file (osa-chrome--find-script "delete-tabs-single.js")
                  :lang "JavaScript"
                  :call "delete_tabs_single"
-                 :args (list osa-chrome-application-name tab-ids)))
+                 :args (list (if (listp osa-chrome-application-name)
+                                 (car osa-chrome-application-name)
+                               osa-chrome-application-name)
+                             tab-ids)))
 
 (defsubst osa-chrome--delete-multi (pid tab-ids)
   (osa-eval-file (osa-chrome--find-script "delete-tabs-multi.js")
@@ -955,7 +969,9 @@ If there is a region, only unmark tabs in region."
   (osa-eval-file (osa-chrome--find-script "view-source-single.js")
                  :lang "JavaScript"
                  :call "view_source_single"
-                 :args (list osa-chrome-application-name
+                 :args (list (if (listp osa-chrome-application-name)
+                                 (car osa-chrome-application-name)
+                               osa-chrome-application-name)
                              window-id tab-id)))
 
 (defsubst osa-chrome--view-source-multi (pid window-id tab-id)
@@ -993,8 +1009,10 @@ in Chrome to use this command."
   (osa-eval-file (osa-chrome--find-script "set-tab-single.js")
                  :lang "JavaScript"
                  :call "set_tab_single"
-                 :args (list osa-chrome-application-name window-id
-                             tab-id (not noraise))))
+                 :args (list (if (listp osa-chrome-application-name)
+                                 (car osa-chrome-application-name)
+                               osa-chrome-application-name)
+                             window-id tab-id (not noraise))))
 
 (defsubst osa-chrome--visit-tab-multi (pid window-id tab-id noraise)
   (osa-eval-file (osa-chrome--find-script "set-tab-multi.js")
